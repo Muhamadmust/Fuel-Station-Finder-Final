@@ -19,9 +19,9 @@ const PRICE_REPORTS_COLLECTION = 'priceReports';
 const FLAGS_COLLECTION = 'flags';
 
 // Local storage backup keys for offline / prototype demo mode
-const LOCAL_STATIONS_KEY = 'fsf_stations_ng_v2';
-const LOCAL_REPORTS_KEY = 'fsf_price_reports_ng_v2';
-const LOCAL_FLAGS_KEY = 'fsf_flags_ng_v2';
+const LOCAL_STATIONS_KEY = 'fsf_stations_ng_v3';
+const LOCAL_REPORTS_KEY = 'fsf_price_reports_ng_v3';
+const LOCAL_FLAGS_KEY = 'fsf_flags_ng_v3';
 
 // Non-fuel place keywords to actively remove / exclude from any results
 const NON_FUEL_EXCLUDE_REGEX = /(church|mosque|chapel|cathedral|parish|ministry|restaurant|cafe|cafeteria|fast food|eatery|grill|bistro|diner|kitchen|bakery|canteen|hotel|lounge|club|bar|school|academy|college|hospital|clinic|pharmacy|supermarket|mall|boutique|salon|spa|estate|parsonage|resort)/i;

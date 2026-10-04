@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Fuel, Map as MapIcon, List, Search, X, LogIn, LogOut, CheckCircle2, Navigation, SlidersHorizontal } from 'lucide-react';
+import { Fuel, Map as MapIcon, List, Search, X, LogIn, LogOut, CheckCircle2, Navigation, SlidersHorizontal, MapPin, ChevronDown, Check, Globe2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { NIGERIAN_REGIONS } from '../data/nigeriaFuelStations';
 
@@ -55,13 +55,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, [isMobileSearchOpen]);
 
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 text-slate-800 shadow-xs">
+    <header className="sticky top-0 z-[2000] bg-white/95 backdrop-blur-md border-b border-slate-200 text-slate-800 shadow-xs">
       <div className="max-w-[1700px] mx-auto px-3 sm:px-5 lg:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
         {/* Left: Brand */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center shadow-md shadow-emerald-900/10 shrink-0">
-            <Fuel className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5]" />
-          </div>
+          <img
+            src="/images/logo.jpg"
+            alt="FuelFinder Logo"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl shadow-md object-cover shrink-0 ring-1 ring-emerald-500/20"
+          />
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-sm sm:text-base font-bold tracking-tight text-slate-900 leading-none">
@@ -75,7 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>₦/Litre</span>
               <span className="w-1 h-1 rounded-full bg-emerald-500"></span>
               {isFirebaseActive ? (
-                <span className="text-emerald-700 font-semibold">56 Live</span>
+                <span className="text-emerald-700 font-semibold">80+ Live</span>
               ) : (
                 <span className="text-amber-800 font-semibold">Verified</span>
               )}
@@ -109,20 +111,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Quick City Dropdown on Desktop */}
           {onSelectCity && (
-            <div className="relative hidden lg:flex items-center">
-              <select
-                value={selectedCity}
-                onChange={(e) => onSelectCity(e.target.value)}
-                className="min-h-[40px] text-xs font-bold bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl px-3 py-1.5 text-slate-700 focus:outline-none cursor-pointer"
-                title="Filter by Nigerian city region"
-              >
-                {NIGERIAN_REGIONS.map((reg) => (
-                  <option key={reg.id} value={reg.id}>
-                    {reg.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <CityDropdown selected={selectedCity} onSelect={onSelectCity} />
           )}
         </div>
 
@@ -297,5 +286,89 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       )}
     </header>
+  );
+};
+
+/** Styled city/state picker replacing the native <select>. */
+const CityDropdown: React.FC<{ selected: string; onSelect: (id: string) => void }> = ({ selected, onSelect }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, []);
+
+  const current = NIGERIAN_REGIONS.find((r) => r.id === selected) ?? NIGERIAN_REGIONS[0];
+
+  return (
+    <div ref={ref} className="relative hidden lg:block shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        title="Jump to a Nigerian city"
+        className={`min-h-[40px] flex items-center gap-2 pl-2.5 pr-2 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-2xs ${
+          selected !== 'all'
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+        }`}
+      >
+        {selected === 'all' ? (
+          <Globe2 className="w-4 h-4 text-emerald-600" />
+        ) : (
+          <MapPin className="w-4 h-4 text-emerald-600" />
+        )}
+        <span className="max-w-[120px] truncate">{current.name}</span>
+        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          className="absolute right-0 mt-2 w-60 max-h-[70vh] overflow-y-auto bg-white border border-slate-200 rounded-2xl shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100"
+        >
+          <div className="px-3.5 pt-1.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Jump to location
+          </div>
+          {NIGERIAN_REGIONS.map((reg) => {
+            const active = reg.id === selected;
+            return (
+              <button
+                key={reg.id}
+                role="option"
+                aria-selected={active}
+                onClick={() => {
+                  onSelect(reg.id);
+                  setOpen(false);
+                }}
+                className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-left text-sm transition-colors ${
+                  active ? 'bg-emerald-50 text-emerald-800 font-bold' : 'text-slate-700 hover:bg-slate-50 font-medium'
+                }`}
+              >
+                <span
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                    active ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'
+                  }`}
+                >
+                  {reg.id === 'all' ? <Globe2 className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
+                </span>
+                <span className="flex-1 truncate">{reg.name}</span>
+                {active && <Check className="w-4 h-4 text-emerald-600" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 };

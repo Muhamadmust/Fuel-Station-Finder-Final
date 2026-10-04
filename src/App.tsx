@@ -28,6 +28,7 @@ function FuelStationApp() {
   const [loading, setLoading] = useState<boolean>(true);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(NIGERIA_DEFAULT_LOCATION);
   const [selectedCity, setSelectedCity] = useState<string>('all');
+  const [mapTarget, setMapTarget] = useState<{ lat: number; lng: number; zoom: number; nonce: number } | null>(null);
 
   // Modals & Panels state
   const [reportingStation, setReportingStation] = useState<StationWithDetails | null>(null);
@@ -37,7 +38,7 @@ function FuelStationApp() {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState<boolean>(false);
 
-  // Filters state (defaults to nationwide radius so all 56 stations across Nigeria are displayed)
+  // Filters state (defaults to nationwide radius so all stations across Nigeria are displayed)
   const [filters, setFilters] = useState<FilterOptions>({
     fuelType: 'all',
     radiusKm: 1000,
@@ -74,10 +75,13 @@ function FuelStationApp() {
     const reg = NIGERIAN_REGIONS.find((r) => r.id === cityId);
     if (reg) {
       const newLoc = { lat: reg.lat, lng: reg.lng };
+      setFocusedStation(null);
+      setCurrentView('map');
+      setMapTarget({ lat: reg.lat, lng: reg.lng, zoom: reg.zoom, nonce: Date.now() });
       setUserLocation(newLoc);
       if (cityId === 'all') {
         setFilters((prev) => ({ ...prev, radiusKm: 1000 }));
-        addToast('info', 'Showing all 56 fuel stations across Nigeria');
+        addToast('info', 'Showing 80+ fuel stations across Nigeria');
       } else {
         setFilters((prev) => ({ ...prev, radiusKm: 60 }));
         addToast('info', `Centered on ${reg.name}`);
@@ -199,7 +203,7 @@ function FuelStationApp() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased selection:bg-emerald-500 selection:text-white">
+    <div className="h-screen bg-slate-50 flex flex-col overflow-hidden font-sans text-slate-800 antialiased selection:bg-emerald-500 selection:text-white">
       {/* Sticky Top Responsive Navbar */}
       <Navbar
         currentView={currentView}
@@ -216,15 +220,15 @@ function FuelStationApp() {
       />
 
       {/* Main Content Area: Responsive Map / List */}
-      <main className="flex-1 flex flex-col relative w-full overflow-hidden">
+      <main className="flex-1 min-h-0 flex flex-col relative w-full overflow-hidden">
         {loading && stations.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 text-center">
             <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 font-bold text-slate-800 text-sm sm:text-base">Loading 50+ Nigerian Fuel Stations...</p>
+            <p className="mt-4 font-bold text-slate-800 text-sm sm:text-base">Loading 80+ Nigerian Fuel Stations...</p>
             <p className="text-xs text-slate-500 mt-1">Retrieving verified stations, live Naira prices, and driver queues</p>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col lg:flex-row relative w-full h-[calc(100vh-56px)] sm:h-[calc(100vh-64px)] overflow-hidden">
+          <div className="flex-1 flex flex-col lg:flex-row relative w-full min-h-0 overflow-hidden">
             {/* Left/Main Column: Map or List View */}
             <div className="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden">
               {currentView === 'map' ? (
@@ -239,6 +243,7 @@ function FuelStationApp() {
                     focusedStation={focusedStation}
                     onSelectStation={setFocusedStation}
                     onRequestLocation={requestLocation}
+                    mapTarget={mapTarget}
                   />
 
                   {/* Mobile/Tablet Floating Quick Controls Bar */}
@@ -262,10 +267,10 @@ function FuelStationApp() {
                   </div>
 
                   {/* Desktop Floating Sidebar Toggle Button (offset to the left of map controls so it never covers the button below) */}
-                  <div className="hidden lg:block absolute top-3 right-[62px] z-20">
+                  <div className="hidden lg:block absolute top-3 right-[64px] z-[1001]">
                     <button
                       onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                      className="bg-white/95 backdrop-blur-md hover:bg-white text-slate-700 px-3.5 py-2.5 rounded-xl shadow-md border border-slate-200 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 min-h-[40px]"
+                      className="bg-white/95 backdrop-blur-md hover:bg-white text-slate-700 px-3.5 py-2 rounded-lg shadow-md border border-slate-200 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 min-h-[40px]"
                       title={isSidebarOpen ? 'Hide station sidebar' : 'Show station sidebar'}
                     >
                       {isSidebarOpen ? (
