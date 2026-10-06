@@ -6,7 +6,7 @@ import {
   orderBy,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db, auth, isFirebaseConfigured, handleFirestoreError, OperationType } from './config';
+import { db, auth, isFirebaseConfigured, handleFirestoreError, OperationType, trackEvent } from './config';
 import type { Station, PriceReport, Flag, StationWithDetails, FuelType, FlagType, ActiveFlagSummary, StationPrices } from '../types';
 import {
   NIGERIA_SEED_STATIONS,
@@ -305,6 +305,8 @@ export async function submitPriceReport(
   current.unshift(newReport);
   localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(current));
 
+  trackEvent('price_report_submitted', { stationId, fuelType, price });
+
   return newReport;
 }
 
@@ -345,6 +347,8 @@ export async function submitStationFlag(
   const current = getLocalFlags();
   current.unshift(newFlag);
   localStorage.setItem(LOCAL_FLAGS_KEY, JSON.stringify(current));
+
+  trackEvent('station_flagged', { stationId, type });
 
   return newFlag;
 }

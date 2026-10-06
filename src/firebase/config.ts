@@ -1,7 +1,14 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, type Firestore, doc, getDocFromServer } from 'firebase/firestore';
-import firebaseConfig from '../firebase-applet-config.json';
+import { getAnalytics, isSupported, logEvent, type Analytics } from 'firebase/analytics';
+import rawFirebaseConfig from '../firebase-applet-config.json';
+
+const envMeasurementId = import.meta.env.VITE_FIREBASE_MEASUREMENT_ID;
+const firebaseConfig = {
+  ...rawFirebaseConfig,
+  measurementId: envMeasurementId || rawFirebaseConfig.measurementId || '',
+};
 
 export enum OperationType {
   CREATE = 'create',
@@ -55,6 +62,8 @@ export const isFirebaseConfigured = Boolean(
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
+let analytics: Analytics | null = null;
+
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account',
@@ -68,6 +77,18 @@ if (isFirebaseConfigured) {
     db = firebaseConfig.firestoreDatabaseId
       ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
       : getFirestore(app);
+
+    // Initialize Google Analytics for Firebase (100% Free on Spark plan)
+    if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+      isSupported().then((supported) => {
+        if (supported && app) {
+          analytics = getAnalytics(app);
+          logEvent(analytics, 'page_view');
+        }
+      }).catch((err) => {
+        console.debug('Firebase Analytics is not supported in this environment:', err);
+      });
+    }
 
     // Validate connection to Firestore as required by Firebase skill
     const testConnection = async () => {
@@ -87,4 +108,17 @@ if (isFirebaseConfigured) {
   }
 }
 
-export { app, auth, db };
+/**
+ * Safely track analytics events (100% free)
+ */
+export function trackEvent(eventName: string, params?: Record<string, any>) {
+  if (analytics) {
+    try {
+      logEvent(analytics, eventName, params);
+    } catch {
+      // Ignore if analytics tracking fails or is blocked
+    }
+  }
+}
+
+export { app, auth, db, analytics };
