@@ -146,7 +146,7 @@ export const MapView: React.FC<MapViewProps> = ({
         const background =
           tier.label === 'Cheapest' ? '#059669' : tier.label === 'Higher' ? '#e11d48' : '#d97706';
         const isSelected = focusedStation?.id === station.id;
-        const showName = zoom >= 12 || isSelected;
+        const showName = zoom >= 14 || isSelected;
         const icon = buildStationIcon({
           name: station.name,
           priceText: priceVal ? formatPrice(priceVal) : '⛽',
@@ -313,8 +313,8 @@ export const MapView: React.FC<MapViewProps> = ({
         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
         <span className="font-bold text-slate-900">Zoom: {zoom}x</span>
         <span className="text-slate-300">|</span>
-        <span className={zoom >= 12 ? 'text-emerald-700 font-bold' : 'text-slate-500'}>
-          {zoom >= 12 ? 'Station names visible' : 'Zoom in to view station names'}
+        <span className={zoom >= 14 ? 'text-emerald-700 font-bold' : 'text-slate-500'}>
+          {zoom >= 14 ? 'Station names visible' : 'Zoom in to view station names'}
         </span>
       </div>
 
